@@ -4,8 +4,8 @@
 // @description  中文化 GitHub 界面的部分菜单及内容。
 // @copyright    2021, buiawpkgew1
 // @icon         https://github.githubassets.com/pinned-octocat.svg
-// @version      1.9.0-2024-02-05
-// @author       沙漠之子
+// @version      0.1
+// @author       buiawpkgew1
 // @license      GPL-3.0
 // @match        https://github.com/*
 // @match        https://gist.github.com/*
@@ -28,34 +28,29 @@
     let enable_RegExp = GM_getValue("enable_RegExp", 1);
 
     /**
-     * watchUpdate 函数：监视页面变化，根据变化的节点进行翻译
+     * watchUpdate 函数：监视页面变化，优化点：
+     *  - 使用 `MutationObserver.takeRecords()` 清除记录，以避免内存泄漏。
      */
     function watchUpdate() {
-        // 检测浏览器是否支持 MutationObserver
-        const MutationObserver =
-            window.MutationObserver ||
-            window.WebKitMutationObserver ||
-            window.MozMutationObserver;
+        const MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 
-        // 获取当前页面的 URL
-        const getCurrentURL = () => location.href;
+        function getCurrentURL() {
+            return location.href;
+        }
         getCurrentURL.previousURL = getCurrentURL();
 
-        // 创建 MutationObserver 实例，监听 DOM 变化
-        const observer = new MutationObserver((mutations, observer) => {
-            const currentURL = getCurrentURL();
+        const observer = new MutationObserver((mutationsList, observer) => {
+            mutationsList.forEach(mutation => {
+                const currentURL = getCurrentURL();
 
-            // 如果页面的 URL 发生变化
-            if (currentURL !== getCurrentURL.previousURL) {
-                getCurrentURL.previousURL = currentURL;
-                page = getPage(); // 当页面地址发生变化时，更新全局变量 page
-                console.log(`链接变化 page= ${page}`);
+                if (currentURL !== getCurrentURL.previousURL) {
+                    getCurrentURL.previousURL = currentURL;
+                    page = getPage(); // 当页面地址发生变化时，更新全局变量 page
+                    console.log(`链接变化 page= ${page}`);
 
-                transTitle(); // 翻译页面标题
+                    transTitle(); // 翻译页面标题
 
-                if (page) {
                     setTimeout(() => {
-                        // 使用 CSS 选择器找到页面上的元素，并将其文本内容替换为预定义的翻译
                         transBySelector();
                         if (page === "repository") { //仓库简介翻译
                             transDesc(".f4.my-3");
@@ -64,16 +59,19 @@
                         }
                     }, 500);
                 }
-            }
 
-            if (page) {
-                // 使用 filter 方法对 mutations 数组进行筛选，
-                // 返回 `节点增加、文本更新 或 属性更改的 mutation` 组成的新数组 filteredMutations。
-                const filteredMutations = mutations.filter(mutation => mutation.addedNodes.length > 0 || mutation.type === 'attributes' || mutation.type === 'characterData');
+                if (page) {
+                    // 使用 filter 方法进行优化，并清除已处理的 mutation 记录
+                    const filteredMutations = mutationsList.filter(mutation =>
+                        mutation.addedNodes.length > 0 ||
+                        mutation.type === 'attributes' ||
+                        mutation.type === 'characterData'
+                    );
+                    observer.takeRecords(); // 清除已处理的 mutation 记录
 
-                // 处理每个变化
-                filteredMutations.forEach(mutation => traverseNode(mutation.target));
-            }
+                    filteredMutations.forEach(mutation => traverseNode(mutation.target));
+                }
+            });
         });
 
         // 配置 MutationObserver
@@ -464,31 +462,29 @@
      * init 函数：初始化翻译功能。
      */
     function init() {
-        // 获取当前页面的翻译规则
         page = getPage();
         console.log(`开始page= ${page}`);
 
-        // 翻译页面标题
         transTitle();
 
         if (page) {
-            // 立即翻译页面
             traverseNode(document.body);
 
             setTimeout(() => {
-                // 使用 CSS 选择器找到页面上的元素，并将其文本内容替换为预定义的翻译
                 transBySelector();
-                if (page === "repository") { //仓库简介翻译
+                if (page === "repository") {
                     transDesc(".f4.my-3");
-                } else if (page === "gist") { // Gist 简介翻译
+                } else if (page === "gist") {
                     transDesc(".gist-content [itemprop='about']");
                 }
             }, 100);
         }
         // 监视页面变化
         watchUpdate();
+
     }
 
     // 执行初始化
-    init();
+    window.addEventListener('DOMContentLoaded', init); // 更改为监听DOMContentLoaded事件来执行初始化
+
 })(window, document);
