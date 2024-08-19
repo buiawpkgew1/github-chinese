@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         GitHub 中文插件
+// @name         GitHub 中文插件 Gitee(Fitten)
 // @namespace    https://github.com/buiawpkgew1/github-chinese
 // @description  中文化 GitHub 界面的部分菜单及内容。
 // @copyright    2021, buiawpkgew1
