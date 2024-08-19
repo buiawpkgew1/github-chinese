@@ -11,7 +11,7 @@
 // @match        https://skills.github.com/*
 // @match        https://gist.github.com/*
 // @match        https://www.githubstatus.com/*
-// @require      https://raw.githubusercontent.com/maboloshi/github-chinese/gh-pages/locals.js?v1.9.2
+// @require      https://gitee.com/awnioow/github-chinese/raw/Fitten/locals.js?v1.9.2
 // @run-at       document-end
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
