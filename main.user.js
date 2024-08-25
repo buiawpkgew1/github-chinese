@@ -47,7 +47,7 @@
         const { characterDataPage, ignoreMutationSelectorPage, ignoreSelectorPage } = I18N.conf; // 获取配置
 
         characterData = characterDataPage.includes(page); // 更新是否处理文本节点
-        ignoreMutationSelectors = ignoreMutationSelectorPage[page] || []; // 更新忽略的突变元素选择器
+        ignoreMutationSelectors = ignoreMutationSelectorPage['*'].concat(ignoreMutationSelectorPage[page] || []); // 更新忽略的突变元素选择器
         ignoreSelectors = ignoreSelectorPage['*'].concat(ignoreSelectorPage[page] || []); // 更新忽略的元素选择器
         tranSelectors = (I18N[lang][page]?.selector || []).concat(I18N[lang]['public'].selector || []); // 更新通过 CSS 选择器翻译的规则
         regexpRules = (I18N[lang][page].regexp || []).concat(I18N[lang]['public'].regexp || []); // 更新正则翻译规则
