@@ -126,3 +126,6 @@ I18N.conf = {
         ],
     },
 };
+
+// 错误处理机制：建议在实际使用中，对正则表达式的匹配结果进行检查，确保匹配成功。
+// 例如：if (!I18N.conf.rePagePath.test(pathname)) { console.error("Pathname 匹配失败"); }
