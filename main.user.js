@@ -330,7 +330,8 @@
                 }
             }
         }
-        return false;
+
+        return false; // 没有翻译条目
     }
 
     /**
@@ -388,8 +389,8 @@
                 "contents": [{
                     "text": text
                 }]
-            }),
-            responseType: "json",
+            }), // 请求的数据
+            responseType: "json", // 响应的数据类型为 JSON
             onload: (res) => {
                 try {
                     const { status, response } = res;
@@ -429,7 +430,9 @@
             enable_RegExp = !enable_RegExp;
             GM_setValue("enable_RegExp", enable_RegExp);
             GM_notification(`已${enable_RegExp ? '开启' : '关闭'}正则功能`);
-            if (enable_RegExp) location.reload();
+            if (enable_RegExp) {
+                location.reload();
+            }
             GM_unregisterMenuCommand(id);
             id = GM_registerMenuCommand(`${enable_RegExp ? '关闭' : '开启'}正则功能`, toggleRegExp);
         };

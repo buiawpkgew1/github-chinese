@@ -3,7 +3,7 @@
     locals.js - 搭配用户脚本插件`GitHub 中文化插件`的页面匹配规则, 翻译忽略规则,
                 词条库文件
     Copyright (C) 2016-2021 楼教主 (https://github.com/52cik)
-    Copyright (C) 2021-当前 buiawpkgew1 (https://github.com/buiawpkgew1)
+    Copyright (C) 2021-当前 沙漠之子 (https://github.com/maboloshi)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-    Home: https://github.com/buiawpkgew1/github-chinese
+    Home: https://github.com/maboloshi/github-chinese
 */
 var I18N = {};
 
@@ -12266,7 +12266,6 @@ I18N["zh-CN"]["repository/network"] = { // 仓库 -> 洞察 - 网络图
                 "Scroll all the way down": "一直向下滑动",
 
             "Network graph": "网络图",
-            "Find useful forks":"找到有用的叉子",
             "Timeline of the most recent commits to this repository and its network ordered by most recently pushed to.": "最近提交到此仓库的时间轴及其网络图按最近推送的顺序排序。",
 
             "The repository network shows the 100 most recently pushed forks.": "仓库网络图显示最近推送的 100 个复刻。",
