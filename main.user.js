@@ -4,14 +4,14 @@
 // @description  中文化 GitHub 界面的部分菜单及内容。
 // @copyright    2021, buiawpkgew1
 // @icon         https://github.githubassets.com/pinned-octocat.svg
-// @version      1.9.3-2024-08-22
+// @version      1.9.3-2024-09-28
 // @author       沙漠之子
 // @license      GPL-3.0
 // @match        https://github.com/*
 // @match        https://skills.github.com/*
 // @match        https://gist.github.com/*
 // @match        https://www.githubstatus.com/*
-// @require      https://raw.githubusercontent.com/maboloshi/github-chinese/gh-pages/locals.js?v1.9.3-2024-08-22
+// @require      https://raw.githubusercontent.com/maboloshi/github-chinese/gh-pages/locals.js?v1.9.3-2024-09-28
 // @run-at       document-start
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -41,22 +41,22 @@
      * @param {string} page - 当前页面的类型
      */
     function updateConfig(page) {
-        if (cachedPage === page) return; // 如果页面类型没有变化，直接返回
-        cachedPage = page; // 更新缓存的页面类型
+        if (cachedPage !== page && page) {
+            cachedPage = page;
 
-        const { characterDataPage, ignoreMutationSelectorPage, ignoreSelectorPage } = I18N.conf; // 获取配置
-
-        characterData = characterDataPage.includes(page); // 更新是否处理文本节点
-        ignoreMutationSelectors = ignoreMutationSelectorPage['*'].concat(ignoreMutationSelectorPage[page] || []); // 更新忽略的突变元素选择器
-        ignoreSelectors = ignoreSelectorPage['*'].concat(ignoreSelectorPage[page] || []); // 更新忽略的元素选择器
-        tranSelectors = (I18N[lang][page]?.selector || []).concat(I18N[lang]['public'].selector || []); // 更新通过 CSS 选择器翻译的规则
-        regexpRules = (I18N[lang][page].regexp || []).concat(I18N[lang]['public'].regexp || []); // 更新正则翻译规则
+            const { characterDataPage, ignoreMutationSelectorPage, ignoreSelectorPage } = I18N.conf;
+            characterData = characterDataPage.includes(page);
+            // 忽略突变元素选择器
+            ignoreMutationSelectors = ignoreMutationSelectorPage['*'].concat(ignoreMutationSelectorPage[page] || []);
+            // 忽略元素选择器
+            ignoreSelectors = ignoreSelectorPage['*'].concat(ignoreSelectorPage[page] || []);
+            // 通过 CSS 选择器翻译的规则
+            tranSelectors = (I18N[lang][page]?.selector || []).concat(I18N[lang]['public'].selector || []);
+            // 正则词条
+            regexpRules = (I18N[lang][page].regexp || []).concat(I18N[lang]['public'].regexp || []);
+        }
     }
 
-    /**
-     * 初始化页面
-     * @returns {string|boolean} 当前页面的类型
-     */
     function initPage() {
         const page = getPage(); // 获取当前页面的类型
         updateConfig(page); // 更新配置
@@ -81,10 +81,10 @@
             if (page) { // 如果页面类型有效
                 const filteredMutations = mutations.flatMap(({ target, addedNodes, type }) => {
                     let nodes = [];
-                    if (type === 'childList' && addedNodes.length > 0) { // 如果是节点增加的突变
+                    if (type === 'childList' && addedNodes.length > 0) {
                         nodes = Array.from(addedNodes); // 将新增节点转换为数组
-                    } else if (type === 'attributes' || (characterData && type === 'characterData')) { // 如果是属性或文本节点的突变
-                        nodes = [target]; // 仅处理目标节点
+                    } else if (type === 'attributes' || (characterData && type === 'characterData')) {
+                        nodes = [target]; // 否则，仅处理目标节点
                     }
 
                     return nodes.filter(node => !ignoreMutationSelectors.some(selector => node.parentElement?.closest(selector))); // 筛选忽略的突变节点
@@ -105,7 +105,9 @@
      * @param {Node} node - 需要遍历的节点
      */
     function traverseNode(node) {
-        if (ignoreSelectors.some(selector => node.matches?.(selector))) return; // 跳过忽略的节点
+        // 跳过忽略的节点
+        const skipNode = node => ignoreSelectors.some(selector => node.matches?.(selector));
+        if (skipNode(node)) return;
 
         if (node.nodeType === Node.ELEMENT_NODE) { // 如果是元素节点
             switch (node.tagName) {
@@ -141,8 +143,9 @@
             }
 
             node.childNodes.forEach(child => traverseNode(child)); // 遍历子节点
-        } else if (node.nodeType === Node.TEXT_NODE && node.length <= 500) { // 如果是文本节点且长度小于等于 500
-            transElement(node, 'data'); // 翻译文本节点
+
+        } else if (node.nodeType === Node.TEXT_NODE && node.length <= 500) { // 文本节点且长度小于等于 500
+            transElement(node, 'data');
         }
     }
 
@@ -202,13 +205,13 @@
      * 翻译页面标题
      */
     function transTitle() {
-        const text = document.title; // 获取标题文本内容
+        const text = document.title; // 获取获取标题文本内容
         let translatedText = I18N[lang]['title']['static'][text] || ''; // 尝试获取静态翻译
         if (!translatedText) { // 如果没有静态翻译
             const res = I18N[lang]['title'].regexp || []; // 获取正则翻译规则
             for (let [a, b] of res) {
-                translatedText = text.replace(a, b); // 尝试正则翻译
-                if (translatedText !== text) break; // 如果翻译成功，跳出循环
+                translatedText = text.replace(a, b);
+                if (translatedText !== text) break;
             }
         }
         document.title = translatedText; // 更新页面标题
@@ -369,6 +372,7 @@
     }
 
     /**
+     * registerMenuCommand 函数：注册菜单。
      * 注册菜单命令
      */
     function registerMenuCommand() {

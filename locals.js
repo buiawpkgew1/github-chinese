@@ -48,7 +48,7 @@ I18N.conf = {
     rePagePath: /^\/($|dashboard|signup|login\/oauth|login|logout|sessions?|password_reset|orgs|explore|topics|notifications\/subscriptions|notifications|watching|stars|issues|pulls|search|trending|showcases|new\/(import|project)|new|import|settings\/(profile|admin|appearance|accessibility|notifications|billing|emails|security_analysis|security-log|security|auth|sessions|keys|ssh|gpg|organizations|enterprises|blocked_users|interaction_limits|code_review_limits|repositories|codespaces|deleted_repositories|packages|copilot|pages|replies|installations|apps\/authorizations|reminders|sponsors-log|apps|(?:personal-access-|)tokens|developers|applications\/new|applications|connections\/applications)|settings|installations\/new|marketplace|apps|account\/(organizations\/new|choose|upgrade|billing\/history)|projects|redeem|discussions|events|collections|sponsors|sponsoring|github-copilot\/signup|codespaces|developer\/register|features|security)|^\/users\/[^\/]+\/(projects|packages|succession\/invitation)/,
 
     // 仓库路径
-    rePagePathRepo: /^\/[^\/]+\/[^\/]+\/(issues|pulls|pull|tree|watchers|stargazers|new|edit|delete|upload|find|wiki|branches|discussions|activity|rules|releases|packages|tags|labels|milestones|compare|commit|blob|blame|actions|runs|deployments|security|pulse|community|forks|fork|import|graphs\/(contributors|community|traffic|commit-activity|code-frequency)|network$|network\/(dependencies|dependents|updates|members)|settings\/(access|code_review_limits|interaction_limits|branches|branch_protection_rules|tag_protection|rules|actions|hooks|environments|codespaces|pages|security_analysis|dependabot_rules|keys|secrets|variables|installations|notifications)|settings|transfer|projects\/new|pkgs|contribute|subscription|invitations|codespaces|attestations|custom-properties)/,
+    rePagePathRepo: /^\/[^\/]+\/[^\/]+\/(issues|pulls|pull|tree|watchers|stargazers|new|edit|delete|upload|find|wiki|branches|discussions|activity|rules|releases|packages|tags|labels|milestones|compare|commit|blob|blame|actions(\/metrics\/usage)?|runs|deployments|security|pulse|community|forks|fork|import|graphs\/(contributors|community|traffic|commit-activity|code-frequency)|network$|network\/(dependencies|dependents|updates|members)|settings\/(access|code_review_limits|interaction_limits|branches|branch_protection_rules|tag_protection|rules|actions|hooks|environments|codespaces|pages|security_analysis|dependabot_rules|keys|secrets|variables|installations|notifications)|settings|transfer|projects\/new|pkgs|contribute|subscription|invitations|codespaces|attestations|custom-properties)/,
 
     // 组织路径
     rePagePathOrg: /^\/[^\/]+\/[^\/]+\/(repositories\/new|repositories|discussions|projects|packages|teams|new-team|people|outside-collaborators|pending_collaborators|dashboard|billing_managers\/new|settings\/(profile|billing|roles|member_privileges|teams|import-export|blocked_users|interaction_limits|code_review_limits|moderators|repository-defaults|rules|codespaces|copilot|actions|hooks|discussions|packages|pages|projects|security_analysis|security|dependabot_rules|domains|secrets|variables|oauth_application_policy|installations|personal-access-token|reminders|sponsors-log|audit-log|deleted_repositories|applications\/new|applications|apps\/new|apps|publisher)|topics|domain\/new|audit-log\/event_settings|billing\/(history|plans)|policies\/applications)|^\/[^\/]+\/(enterprise_plan|sponsoring)/,
@@ -65,7 +65,7 @@ I18N.conf = {
         'repository/commit': ["td.blob-code"], // 代码差异 分屏/同屏
         'repository/blob': ["#highlighted-line-menu-positioner"], // 代码视图 存在
         'repository/blame': ["#highlighted-line-menu-positioner"], // 代码视图
-        'repository': [".AppHeader-context", "article.markdown-body", "table"],
+        'repository': [".AppHeader-context", "table"], //  "article.markdown-body",
         'repository/releases': [".Box-footer"], // 附件清单
         '*': [
             'div.QueryBuilder-StyledInputContainer',  // 顶部搜索栏 关键词被翻译
@@ -92,7 +92,7 @@ I18N.conf = {
             'p.f4.my-3', // 仓库简介正文
             '#translate-me',
             '.my-3.d-flex.flex-items-center', // 仓库简介中的链接
-            // '.markdown-body',
+            'article.markdown-body', // 自述文件正文
             'li.mt-2',
         ],
         'repository/tree': [
@@ -101,9 +101,11 @@ I18N.conf = {
             'tr.react-directory-row', // 文件列表中文件夹和文件条目
             '#repos-header-breadcrumb',
             '#file-name-id', // 文件路径中文件部分
+            'article.markdown-body', // Markdown 正文
         ],
         'repository/blob': [
             '.AppHeader-context-full', // 顶部 <username>/<repo_name>
+            'article.markdown-body', // Markdown 正文
             'div.react-tree-show-tree-items', // 左侧文件树项目
             '[id^="offset"]', // 符号-->引用
             '#highlighted-line-menu-positioner', // 代码视图
@@ -133,9 +135,16 @@ I18N.conf = {
         'repository/actions': [
             'table.highlight', // 工作流程文件 源码视图
         ],
+        'repository/releases': [
+            'div.markdown-body', // 发布版正文
+        ],
+        'repository/wiki': [
+            '#wiki-body', // wiki 正文
+        ],
         'dashboard': [
             '.js-notice-dismiss', // 右侧栏 广告
             '.TimelineItem', // 右侧栏 最新变化
+            'section.comment-body', // 发布版正文
         ],
         'gist': [
             '.gist-content[itemprop="about"]', // Gist 简介
@@ -143,12 +152,73 @@ I18N.conf = {
             'table.js-diff-table', // 代码差异
         ],
         '*': [
-            '.markdown-body',
+            '.js-comment-body', '.js-preview-body',
             '.markdown-title',
             'span.ActionListItem-label.text-normal', // 顶部搜索栏 关键词被翻译
             'CODE', 'SCRIPT', 'STYLE', 'LINK', 'IMG', 'MARKED-TEXT', 'PRE', 'KBD', // 特定元素标签
         ],
-    }
+    },
+
+    // 以下兼容 1.9.2 版本，且冻结 等待 1.9.3 明显 Bug 修复
+    /**
+     * 要翻译的页面正则(不含仓库页)
+     *
+     * 2021-10-07 11:53:34
+     * GitHub 网站更新 调整 Class 过滤规则
+     * 且过滤 Class 并不是总是生效，增加 PathName 规则补充
+     */
+    rePageClass: /\b(page-(profile|new-repo|create-org)|session-authentication)\b/,
+
+    /**
+     * 忽略区域的 class 正则
+     *
+     * 代码编辑器 内容 代码高亮 CodeMirror
+     * 代码编辑器 最小单元 cm-line ͼ.*
+     * 代码高亮 blob-code
+     * 仓库名和用户名 repo-and-owner (已知出现在：应用安装授权页和设置页 选定仓库)
+     * 文件,目录位置栏 |js-path-segment|final-path
+     * 文件列表 files js-navigation-container js-active-navigation-container
+     * 评论内容等 js-comment-body
+     * 评论预览 js-preview-body
+     * 评论编辑区域 comment-form-textarea
+     * 文件搜索模式 js-tree-finder-virtual-filter
+     * 仓库文件列表 js-navigation-open Link--primary
+     * 快捷键 按键 js-modifier-key
+     * 洞察-->流量-->热门内容列表 capped-list-label
+     * realease 页面 描述主体 markdown-body my-3
+     * 仓库页 仓库描述 f4 my-3
+     * 提交的用户名 commit-author$
+     * 搜索页 搜索结果 search-match
+     * 追溯 视图 代码 react-code-text
+     * tree 视图 文件名 react-directory-filename-column 提交信息 react-directory-commit-message
+     * 代码差异页面 代码 pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en
+     */
+    reIgnoreClass: /(cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
+
+    /**
+     * 忽略区域的 itemprop 属性正则
+     * name 列表页 仓库名
+     * author 仓库页 作者名称
+     * additionalName 个人主页 附加名称
+     */
+    reIgnoreItemprop: /(name|author|additionalName)/,
+
+    /**
+     * 忽略区域的 特定元素id 正则
+     * /blob页面 offset  符号-->引用
+     * /blob页面 右侧 符号筛选 filter-results
+     * fix repo详情页文件路径breadcrumb
+     */
+    reIgnoreId: /(readme|^offset|breadcrumb|file-name-id|filter-results)/,
+
+    /**
+     * 忽略区域的 标签 正则
+     * /i 规则不区分大小写
+     */
+    reIgnoreTag: ['CODE', 'SCRIPT', 'STYLE', 'LINK', 'IMG', 'MARKED-TEXT', 'PRE', 'KBD'],
+    // marked-text --> 文件搜索模式/<user-name>/<repo-name>/find/<branch> 文件列表条目
+    // ^script$ --> 避免勿过滤 notifications-list-subscription-form
+    // ^pre$ --> 避免勿过滤
 };
 
 I18N["zh-CN"] = {};
@@ -248,6 +318,7 @@ I18N["zh-CN"]["title"] = { // 标题翻译
         "Error": "错误",
         "Discover gists · GitHub": "探索代码片段 · GitHub",
         "Explore GitHub Sponsors": "探索 GitHub 赞助者",
+        "Actions Usage Metrics": "操作使用情况",
     },
     "regexp": [ // 正则翻译
         [/Authorized OAuth Apps/, "授权的 OAuth 应用"],
@@ -322,6 +393,7 @@ I18N["zh-CN"]["title"] = { // 标题翻译
         [/Dependabot secrets · ([^ ]+)/, "Dependabot 机密 · $1"],
         //[/Contributors to ([^ ]+)\/([^ ]+)/, "贡献者 · $1/$2"],
         [/([^ ]+) repositories/, "$1 的仓库"],
+        [/Create new page · ([^ ]+) Wiki/, "新建页面 · $1 的 Wiki"],
         ["_regexp_end", "end"]
     ],
 };
@@ -527,6 +599,7 @@ I18N["zh-CN"]["public"] = { // 公共区域翻译
                     "Enables rich diffs of Jupyter Notebooks in pull requests": "在拉取请求中启用 Jupyter Notebook 的丰富差异视图",
                     "Note: commenting on rich diff views of notebooks is not yet supported": "注意：尚不支持对 Jupyter Notebook 的丰富差异视图进行评论",
                 "New Pull Request Commits Experience": "新拉取请求提交体验",
+                    "The pull request commits page has been refreshed to improve performance, improve consistency with other pages, and to make the page more accessible!": "拉取请求提交页面已被刷新，以提高性能，改善与其他页面的一致性，并使页面更易于访问！",
                 "Enhanced Repos Insights Views": "仓库洞察增强视图",
                     "We’re thrilled to introduce our new graphics library! With this update, you’ll find significant enhancements to two of our repository insights views—Contributors and Code Frequency. Both now utilize an SVG-based solution, offering improved focus navigation for precise, point-by-point interaction. You can also hide a series by interacting with the chart legend and view or download the data in both table format and as PNGs.": "我们非常高兴地介绍我们的新图形库！通过此次更新，您将发现我们的两个仓库洞察视图-- “贡献者” 和 “代码频率” 都有了显著增强。这两个视图现在都采用了基于 SVG 的解决方案，为精确的逐点交互提供了改进的焦点导航。您还可以通过与图表图例交互来隐藏系列，并以表格格式和 PNG 格式查看或下载数据。",
                 "Slash Commands": "斜杠命令",
@@ -537,6 +610,8 @@ I18N["zh-CN"]["public"] = { // 公共区域翻译
                     "Please": "请",
                     "give feedback": "提交反馈",
                     "so we can improve it!": "以便我们加以改进！",
+                // 出错提示
+                    "Sorry, something went wrong and we were not able to fetch the feature previews": "对不起，出了点问题，我们无法获取功能预览",
             "Settings": "设置",
             "GitHub Docs": "GitHub 文档",
             "GitHub Support": "GitHub 支持",
@@ -689,6 +764,10 @@ I18N["zh-CN"]["public"] = { // 公共区域翻译
             "Styling with Markdown is supported.": "支持 Markdown 语法。",
             "Paste, drop, or click to add files": "粘贴、拖放或点击添加文件",
             "Uploading your files…": "正在上传您的文件…",
+            // 文件过大
+                "This video is too big.": "该影片过大。",
+                "Try again": "请上传",
+                "with a file size less than 10MB.": "体积小于10MB的文件",
 
             "Close issue": "关闭议题", // issue页 评论框
                 "Close as completed": "完成后关闭",
@@ -721,6 +800,9 @@ I18N["zh-CN"]["public"] = { // 公共区域翻译
             "Update": "更新", // 新建讨论
             "discussion": "讨论", // 新建讨论
             "discussions": "讨论", // 新建讨论
+
+            "Spammy": "仅自己可见",
+                "This user is marked as spammy. Their comments will onlyshow in staff mode.": "该用户已被封号，评论仅自己可见。",
 
         // 添加到清单
             "Add to list": "添加到清单",
@@ -1085,15 +1167,18 @@ I18N["zh-CN"]["public"] = { // 公共区域翻译
          *  Commits on Jul 4, 2023   // 提交页面、仓库拉取请求页->提交卡
          *  Joined on Jul 4, 2023    // 追星者，关注者页面
          *
-         * 更像于 2023-11-11 16:48:02
+         * 更新于 2023-11-11 16:48:02
          * 个人资料页->贡献卡
          * 日期带后缀
+         * on March 19th.
+         * on August 22nd.
+         * on August 21st.
          *
          * Tip:
          * 正则中的 ?? 前面的字符 重复0次或1次
          * 正则中的 ?: 非捕获符号(即关闭圆括号的捕获能力) 使用方法 (?: 匹配规则) -->该匹配不会被捕获 为 $数字
          */
-        [/(^Updated |^Commits on |^Joined on |^on )?(?:(Sun(?:day)?|Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?)?,? )?(?:(\d{1,2}) )?(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)(?: \d{1,2}(?:st|nd|rd|th)?)?,? (\d{4})?|(\d{1,2}) (Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?) (\d{4})(?:\s*(?:–|-|to)\s*(\d{1,2}) (Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?) (\d{4}))?/g, function (all, prefix, week, date1, month, year1, date2, month2, year2) {
+        [/(^Updated |^Commits on |^Joined on |on )?(?:(Sun(?:day)?|Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?)?,? )?(?:(\d{1,2})(?:st.|nd.|rd.|th.)?)? ?(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?) ?(\d{1,2})?,? (\d{4})?/g, function (all, prefix, week, date1, month, date2, year) {
             var prefixKey = {
                 "Updated "   : "更新于 ",
                 "Commits on ": "提交于 ",
@@ -1125,8 +1210,7 @@ I18N["zh-CN"]["public"] = { // 公共区域翻译
 
             // 处理日期
             var date = date1 ? date1 : date2;
-            var year = year1 ? year1 : year2;
-            var formattedDate = (year ? year + '年' : '') + monthKey[month ? month.substring(0, 3) : month2.substring(0, 3)] + (date ? date + '日' : '');
+            var formattedDate = (year ? year + '年' : '') + monthKey[month.substring(0, 3)] + (date ? date + '日' : '');
 
             // 处理星期
             var formattedWeek = week ? '，' + weekKey[week.substring(0, 3)] : '';
@@ -1766,8 +1850,21 @@ I18N["zh-CN"]["page-profile"] = { // 个人首页
         [/([\d,]+) contributions? in (\d+) in ([^ ]+)/, "在 $2 年中向 $3, 贡献 $1 次"],
         [/([\d,]+) contributions? in (\d+)/, "在 $2 年中贡献 $1 次"],
         [/(\d+) contributions? in private repositor(y|ies)/, "私有仓库 $1 个贡献"],
-        [/(\d+|No) contributions?/, function (all, number) {
-            return number === 'No' ? "无贡献" : number + " 次贡献";
+        [/(\d+|No) contribution(?:s)? on (January|February|March|April|May|June|July|August|September|October|November|December) (\d+)(?:st|nd|rd|th)./, function (all, number, month , day) {
+            var monthKey = {
+                "January"   : "1月",
+                "February"  : "2月",
+                "March"     : "3月",
+                "April"     : "4月",
+                "June"      : "6月",
+                "July"      : "7月",
+                "August"    : "8月",
+                "September" : "9月",
+                "October"   : "10月",
+                "November"  : "11月",
+                "December"  : "12月",
+            };
+            return number === 'No' ? monthKey[month] + day + "日，"+ "无贡献"  : monthKey[month] + day + "日，" + number + " 次贡献";
         }],// 贡献日历
         [/A graph representing ([^ ]+)'s contributions from ( .+) to ( .+)./, "$1 从 $2 到 $3 的贡献图。"],
         [/and (\d+) other repositor(y|ies)/, "和 $1 个其他仓库"], // 活动概览
@@ -4804,6 +4901,12 @@ I18N["zh-CN"]["settings/apps"] = { // 设置 - 开发者设置/GitHub 应用
             "to get started developing on the GitHub API. You can also read more about building GitHub Apps in our": "，开始在 GitHub API 上进行开发。您还可以在我们的文档中阅读更多关于构建 GitHub 应用的信息",
             "developer documentation": "开发者文档",
             "A GitHub App can act on its own behalf, taking actions via the API directly instead of impersonating a user. Read more in our": "GitHub 应用可以代表自己执行操作，直接通过 API 执行操作，而不是冒充用户。阅读我们的更多内容", // 存在 app时
+            
+            // 无应用提示
+                "No GitHub Apps": "无 GitHub 应用",
+                    "Want to build something that integrates with and extends GitHub? Register a new GitHub App to get started developing on the GitHub API.": "想创建与 GitHub 集成并扩展 GitHub 的应用程序吗？注册一个新的 GitHub 应用程序，开始使用 GitHub API 进行开发。",
+                
+                "View documentation": "查看文档",
 
         // 注册 GitHub 应用 https://github.com/settings/apps/new
             "Register new GitHub App": "注册新 GitHub 应用",
@@ -5346,6 +5449,12 @@ I18N["zh-CN"]["settings/developers"] = { // 设置 - 开发者设置/OAuth 应�
             "to find out more.": "以了解更多情况。",
             "Register a new application": "注册新 OAuth 应用",
 
+            "No OAuth apps": "无 OAuth 应用",
+            "OAuth apps are used to access the GitHub API. Read the docs to find out more.": "OAuth 应用程序用于访问 GitHub API。阅读文档了解详情。",
+            "New OAuth app": "注册新 OAuth 应用",
+
+            "View documentation": "查看文档",
+
     },
     "regexp": [ // 正则翻译
     ],
@@ -5724,6 +5833,7 @@ I18N["zh-CN"]["settings/tokens"] = { // 设置 - 开发者设置/个人访问令
             "Generate token": "生成令牌",
                 // 顶部提醒
                 "Some of the scopes you’ve selected are included in other scopes. Only the minimum set of necessary scopes has been saved.": "您选择的一些作用域包含在其他作用域中。只保存了必要作用域的最小集合。",
+                "Note has already been taken": "备注已存在",
 
             "Make sure to copy your personal access token now. You won’t be able to see it again!": "确保立即复制您的个人访问令牌。您将无法再看到它！",
 
@@ -6036,6 +6146,7 @@ I18N["zh-CN"]["repository-public"] = { // 仓库 - 公共部分
         [/(\d+) failing checks?/, "$1 个失败的检查"],
         [/Failing after (\d+)s/, "在 $1 秒后失败"],
         [/(\d+) in progress check/, "$1 个正在运行的检查"],
+        [/ and /, " 和 "],
         [/, and (\d+) more/, "，以及其他 $1 个组织"], // 用户 浮动信息卡
         [/(\d+) repositor(y|ies)/, "$1 个仓库"], // 组织  浮动信息卡
         [/(\d+) members?/, "$1 个成员"], // 组织  浮动信息卡
@@ -8170,6 +8281,8 @@ I18N["zh-CN"]["repository/pull"] = { // 仓库 - 某个拉取请求页面
             // [/(\d+) active deployments?/, "$1 个活动的部署"],
 
         // 拉取请求 --> 提交 标签卡 /<user-name>/<repo-name>/pull/<id>/commits
+            // 顶部提示
+                "This pull request is big! We're only showing the most recent 250 commits": "该拉取请求过大！仅显示最近 250 次提交",
             "Commits": "提交",
             // [/Commits (.+)/, "提交于 $1"]
             "committed": "提交于",
@@ -8383,6 +8496,23 @@ I18N["zh-CN"]["repository/pull"] = { // 仓库 - 某个拉取请求页面
         
         // 新版 PR 提交页
         [/wants to merge (\d+) commits? into/, "希望合并 $1 条提交到"],
+        [/Commits on (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d+), (\d+)/, function (all, mon, day, year){
+            var monKey = {
+                "Jan": "1月",
+                "Feb": "2月",
+                "Mar": "3月",
+                "Apr": "4月",
+                "May": "5月",
+                "Jun": "6月",
+                "Jul": "7月",
+                "Aug": "8月",
+                "Sep": "9月",
+                "Oct": "10月",
+                "Nov": "11月",
+                "Dec": "12月"};
+            
+            return '提交于' + year + '年' + monKey[mon] + day + '日'; 
+        }],
 
         // 具体某条拉取请求
         [/edited by ([^ ]+)/, "由 $1 编辑"],
@@ -8917,15 +9047,18 @@ I18N["zh-CN"]["repository/commit"] = { // 仓库 - 提交页面
                 "File extensions": "文件扩展名",
                 "No extension": "无扩展名",
             
-            // 中间信息
+            // 中间
             "file": "个文件",
                 "s": " ",
                 "changed": "更改",
+            
+            "Copy file name to clipboard": "复制文件名到剪切板",
             
             // 右侧
             "Top": "顶部",
             "Layout": "布局",
                 "Hide whitespace": "隐藏空白",
+                "Compact line height": "自定义行高",
 
                 "Copy": "复制",
                 "Select all": "全选",
@@ -8933,11 +9066,18 @@ I18N["zh-CN"]["repository/commit"] = { // 仓库 - 提交页面
                 "Expand below": "向下展开",
                 "Go to previous hunk": "上一块",
                 "Go to next hunk": "下一块",
+            
+            "Customizable line height": "自定义行高",
+                "The default line height has been increased for improved accessibility. You can choose to enable a more compact line height from the view settings menu.": "默认行高已增加，以提高可访问性。您可以从视图设置菜单中选择启用更紧凑的行高。",
+                "Enable compact line height": "启用自定义行高",
+                "Dismiss": "禁用",
 
             // 底部评论
             "Comments": "评论",
             "Lock": "锁定",
                 "conversation": "对话",
+                "Off-topic": "偏离主题",
+            "Reference in a new issue": "在新议题中提及",
             "Add files": "添加文件",
             "You're not receiving notifications from this thread.": "您没有收到来自此主题的通知。",
             "You're receiving notifications because you're subscribed to this thread.": "您收到通知是因为您订阅了此主题。",
@@ -8948,9 +9088,9 @@ I18N["zh-CN"]["repository/commit"] = { // 仓库 - 提交页面
         [/(\d+) parents?/, "$1 个父"],
         [/lines? changed/, "行更改"],//新版提交页面
         [/(\d+) changed files?/, "$1 个更改的文件"],
+        [/(\d+) changes: (\d+) additions? & (\d+) deletions?$/, "$1 处更改：$2 处增加和 $3 处删除"],
         [/(\d+) additions?$/, "$1 处增加"],
         [/(\d+) deletions?$/, "$1 处删除"],
-        [/(\d+) changes: (\d+) additions? & (\d+) deletions?$/, "$1 处更改：$2 处增加和 $3 处删除"],
         [/This commit closes issue (#\d+)./, "此提交关闭了议题 $1。"], //具体提交页面
         [/from ([^ ]+) to ([^ ]+)/, "从 $1 到 $2。"], //具体提交页面
         [/([\d,]+) additions, ([\d,]+) deletions not shown because the diff is too large. Please use a local Git client to view these changes./, "$1 处增加，$2 处删除未显示，因为差异太大。请使用本地 Git 客户端查看这些更改。"],
@@ -9079,6 +9219,8 @@ I18N["zh-CN"]["repository/blob"] = { // 仓库 - 浏览代码
                 "This file contains bidirectional Unicode text that may be interpreted or compiled differently than what appears below. To review, open the file in an editor that reveals hidden Unicode characters.": "此文件包含双向 Unicode 文本，其解释或编译方式可能与下面的显示不同。要查看，请在一个能显示隐藏的 Unicode 字符的编辑器中打开文件。",
                 "Learn more about bidirectional Unicode characters": "了解更多关于双向 Unicode 字符的信息",
                 "Show hidden characters": "显示隐藏字符",
+                "Code view is read-only.": "代码视图只读。",
+                    "Switch to the editor.": "切换到编辑器。",
 
             // 正文部分
                 // csv 文件
@@ -10461,6 +10603,9 @@ I18N["zh-CN"]["repository/new"] = { // 仓库 - 新建/编辑/上传/删除文�
                     "branch.": "分支。", // 上传页面
                     "for this commit and start a pull request.": "为这个提交，并且发起一个拉取请求。", // 上传页面
                     "Learn more about pull requests.": "了解更多关于拉取请求的信息。", // 上传页面
+                
+                // 提交后处理页面
+                    "Processing your files…": "正在处理您的文件...",
 
             // 他人仓库
                 "Uploads are disabled.": "上传功能已禁用。",
@@ -10517,6 +10662,7 @@ I18N["zh-CN"]["repository/wiki"] = { // 仓库 - wiki 页面
 
             // 右侧栏
             "Pages": "页面",
+                "Toggle table of contents": "折叠/展开目录",
                 "Find a page…": "搜索页面…",
             "Add a custom sidebar": "添加自定义侧边栏",
             "Clone this wiki locally": "在本地克隆这个 Wiki",
@@ -10548,8 +10694,103 @@ I18N["zh-CN"]["repository/wiki"] = { // 仓库 - wiki 页面
                 "The wiki page was successfully deleted.": "Wiki 页面已成功删除。",
 
         // wiki页面历史 /<user-name>/<repo-name>/wiki/<page name>/_history
+            "History": "历史",
             "Edit page": "编辑页面",
             "Revisions": "修订",
+            "Compare revisions": "比较修订",
+                "Invalid or empty diff.": "无效或无差异。",
+
+        // wiki 编辑器（补全未翻译部分
+            // 工具栏
+                "Header 1": "1 级标题",
+                "Header 2": "2 级标题",
+                "Header 3": "3 级标题",
+
+                "Image": "图片",
+                    "Insert Image": "插入图片",
+                        "Image URL": "图片 URL",
+                        "Alt Text": "文本",
+
+                "Unordered List": "无序列表",
+                "Ordered List": "有序列表",
+                "Blockquote": "整段引用",
+                "Horizontal Rule": "水平规则",
+
+                "Help": "帮助",
+                    "Block Elements": "段落元素",
+                        "Paragraphs & Breaks": "图表 & 段落",
+                            "To create a paragraph, simply create a block of text that is not separated by one or more blank lines. Blocks of text separated by one or more blank lines will be parsed as paragraphs.": "要创建一个段落，只需创建一个没有一个或多个空行分隔的文本块即可。被一个或多个空行分隔的文本块将被解析为段落。",
+                            "If you want to create a line break, end a line with two or more spaces, then hit Return/Enter.": "如果要创建换行符，请在行尾空两格或更多格，然后按 Return/Enter 键。",
+                        "Headers": "标题",
+                            // Markdown 支持两种标题格式。维基编辑器使用“atx”样式的标题。只需在标题文本前加上 # 字符数即可指定标题深度。例如：# 1 级标题，## 2 级标题 和 ### 3 级标题 的标题将逐渐变小。您可以用任意数量的#号结束标题。
+                            "Markdown supports two header formats. The wiki editor uses the “atx”-style headers. Simply prefix your header text with the number of": "Markdown 支持两种标题格式。维基编辑器使用“atx”样式的标题。只需在标题文本前加上",
+                            "characters to specify heading depth. For example:": "字符数即可指定标题深度。例如：",
+                            "will be progressively smaller headers. You may end your headers with any number of hashes.": "的标题将逐渐变小。您可以用任意数量的#号结束标题。",
+                        "Blockquotes": "整段引用",
+                            // Markdown 通过在每行前加上 > 来创建电子邮件风格的 “楷体引号”。如果您决定硬包文本并在每行前加上 > 字符，这种方法看起来效果最好，但 Markdown 也支持在段落前加上 >。
+                                "Markdown creates blockquotes email-style by prefixing each line with the": "Markdown 通过在每行前加上",
+                                ". This looks best if you decide to hard-wrap text and prefix each line with a": "来创建电子邮件风格的 “楷体引号”。如果您决定硬包文本并在每行前加上",
+                                "character, but Markdown supports just putting": "字符，这种方法看起来效果最好，但 Markdown 也支持在段落前加上",
+                                "before your paragraph.": "。",
+                        // 清单
+                            // Markdown 支持有序和无序列表。要创建有序列表，只需在每行前加上一个数字（任何数字都可以，这就是编辑器只使用一个数字的原因）。要创建无序列表，可以在每行前加上 *、+ 或 -。
+                                "Markdown supports both ordered and unordered lists. To create an ordered list, simply prefix each line with a number (any number will do — this is why the editor only uses one number.) To create an unordered list, you can prefix each line with": "Markdown 支持有序和无序列表。要创建有序列表，只需在每行前加上一个数字（任何数字都可以，这就是编辑器只使用一个数字的原因）。要创建无序列表，可以在每行前加上",
+                                "or": "或",
+                            // 列表项可以包含多个段落，但每个段落必须缩进至少 4 个空格或一个制表符。
+                                "List items can contain multiple paragraphs, however each paragraph must be indented by at least 4 spaces or a tab.": "列表项可以包含多个段落，但每个段落必须缩进至少 4 个空格或一个制表符。",
+                        "Code Blocks": "代码块",
+                            "Markdown wraps code blocks in pre-formatted tags to preserve indentation in your code blocks. To create a code block, indent the entire block by at least 4 spaces or one tab. Markdown will strip the extra indentation you’ve added to the code block.": "Markdown 将代码块封装在预设格式的标签中，以保留代码块的缩进。要创建代码块，请将整个代码块缩进至少 4 个空格或一个制表符。Markdown 会去掉您添加到代码块中的额外缩进。",
+                        "Horizontal Rules": "水平规则",
+                            "Horizontal rules are created by placing three or more hyphens, asterisks or underscores on a line by themselves. Spaces are allowed between the hyphens, asterisks or underscores.": "横线规则是将三个或三个以上的连字符、星号或下划线单独放在一行中。连字符、星号或下划线之间允许有空格。",
+                    "Span Elements": "引用元素",
+                        "Links": "链接",
+                            // Markdown 有两种链接类型：内联和引用。对于这两种类型的链接，您希望向用户显示的文本都放在方括号中。例如，如果您想让链接显示文本 “GitHub”，您可以写成 [GitHub]。
+                                "Markdown has two types of links:": "Markdown 有两种链接类型：",
+                                "inline": "内联",
+                                "reference": "引用",
+                                ". For both types of links, the text you want to display to the user is placed in square brackets. For example, if you want your link to display the text “GitHub”, you write": "。对于这两种类型的链接，您希望向用户显示的文本都放在方括号中。例如，如果您想让链接显示文本 “GitHub”，您可以写成",
+                            // 要创建内嵌链接，请在括号后创建一组括号，并在括号内写入 URL。(例如，[GitHub](https://github.com/)）。内联链接允许使用相对路径。
+                                "To create an inline link, create a set of parentheses immediately after the brackets and write your URL within the parentheses. (e.g.,": "要创建内嵌链接，请在括号后创建一组括号，并在括号内写入 URL。(例如，",
+                                "). Relative paths are allowed in inline links.": "）。内联链接允许使用相对路径。",
+                            // 要创建引用链接，请使用两组方括号。[[我的内部链接|内部引用]]将链接到内部引用。
+                                "To create a reference link, use two sets of square brackets.": "要创建引用链接，请使用两组方括号。",
+                                "will link to the internal reference": "将链接到",
+                        "Emphasis": "强调",
+                            // 星号（*）和下划线（_）被视为强调，并用 `<em>` 标签包裹，这在大多数浏览器中通常显示为斜体。双星号（**）或双下划线（__）被视为使用 `<strong>` 标签的粗体。要创建斜体或粗体文本，只需用单个/双个星号/下划线包裹你的单词。例如，**我的双重强调文本** 变成我的双重强调文本，*我的单一强调文本* 变成我的单一强调文本。
+                                "Asterisks (": "星号（",
+                                ") and underscores (": "）和下划线（",
+                                ") are treated as emphasis and are wrapped with an": "）被视为强调，并用",
+                                "tag, which usually displays as italics in most browsers. Double asterisks (": "标签包裹，这在大多数浏览器中通常显示为斜体。双星号（",
+                                ") or double underscores (": "）或双下划线（",
+                                ") are treated as bold using the": "）被视为使用",
+                                "tag. To create italic or bold text, simply wrap your words in single/double asterisks/underscores. For example,": "标签的粗体。要创建斜体或粗体文本，只需用单个/双个星号/下划线包裹你的单词。例如，",
+                                "becomes": "变成",
+                                ", and": "，",
+                        // 代码
+                            // 要创建内联代码，只需用反标 (`) 将代码包起来即可。Markdown 会将 `myFunction` 变成 myFunction。
+                                "To create inline spans of code, simply wrap the code in backticks (": "要创建内联代码，只需用反标",
+                                "). Markdown will turn": ") 将代码包起来即可。Markdown 会将",
+                                "into": "变成",
+                        "Images": "图片",
+                            // Markdown 的图像语法与链接语法很相似；基本上是相同的语法，前面加上一个感叹号（!）。例如，如果您想链接到 https://github.com/unicorn.png 网站上的图片，并使用另一文本 “我的独角兽”，您可以写成 ![My Unicorn](https://github.com/unicorn.png)。
+                            "Markdown image syntax looks a lot like the syntax for links; it is essentially the same syntax preceded by an exclamation point (": "Markdown 的图像语法与链接语法很相似；基本上是相同的语法，前面加上一个感叹号（",
+                            "). For example, if you want to link to an image at": "）。例如，如果您想链接到",
+                            "with the alternate text": "网站上的图片，并使用另一文本",
+                            ", you would write": "，您可以写成",
+                    "Miscellaneous": "杂项",
+                        "Automatic Links": "自动链接",
+                            // 如果您想创建一个能显示实际 URL 的链接，markdown 允许您用 < 和 > 来快速封装 URL。例如，只要写入 <https://github.com/>，就能轻松创建 https://github.com/ 链接。
+                            "If you want to create a link that displays the actual URL, markdown allows you to quickly wrap the URL in": "如果您想创建一个能显示实际 URL 的链接，markdown 允许您用",
+                            "to do so. For example, the link": "来快速封装 URL。例如，创建链接",
+                            "is easily produced by writing": "只需写入",
+                        "Escaping": "忽略",
+                            "If you want to use a special Markdown character in your document (such as displaying literal asterisks), you can escape the character with the backslash (": "如果您想在文档中使用特殊的 Markdown 字符（例如显示星号），可以用反斜杠 (",
+                            "). Markdown will ignore the character directly after a backslash.": ") 来转义该字符。Markdown 将忽略反斜线后的字符。",
+                            //"If you want to use a special Markdown character in your document (such as displaying literal asterisks), you can escape the character with the backslash (\). Markdown will ignore the character directly after a backslash.": "如果您想在文档中使用特殊的 Markdown 字符（例如显示星号），可以用反斜杠 (\) 来转义该字符。Markdown 将忽略反斜线后的字符。",
+
+            // 底部
+                "Attach files by dragging & dropping, selecting or pasting them.": "通过拖放、选择或粘贴来添加文件。",
+                "Styling with Markdown is supported": "支持使用 Markdown 创建样式",
 
     },
     "regexp": [ // 正则翻译
@@ -11804,6 +12045,7 @@ I18N["zh-CN"]["repository-insights-menu"] = { // 仓库 -> 洞察 - 公共部分
             "Network": "网络",
             // "Members": "成员",
             "Forks": "复刻",
+            "Actions Usage Metrics": "操作使用情况",
 
             "People": "成员", //组织仓库
 
@@ -21138,5 +21380,105 @@ I18N["zh-CN"]["orgs/sponsoring"] = { // https://github.com/orgs/<org-name>/spons
     "regexp": [
         [/([^ ]+) hasn’t sponsored any users yet./, "$1 尚未赞助任何人。"],
         ...I18N["zh-CN"]["orgs-public"]["regexp"],
+    ],
+};
+
+I18N["zh-CN"]["repository/actions/metrics/usage"] = { // 仓库 - 洞察 - 操作使用情况
+    "static": {
+        ...I18N["zh-CN"]["repository-public"]["static"],
+        ...I18N["zh-CN"]["repository-insights-menu"]["static"],
+
+        "Period": "周期",
+            "Current week (Mon-Sun)": "本周（周一-周日）",
+            "Current month": "本月",
+            "Last month": "上个月",
+            "Last 30 days": "最近30天",
+            "Last 90 days": "最近90天",
+            "Last year": "最近一年",
+
+        "Total minutes": "总分钟数",
+            //"Total minutes across all workflows in this organization for current month": "当月该组织所有工作流程的总时长",
+        "Total job runs": "总工作运行",
+            //"Total job runs across all workflows in this organization for current month": "当月该组织所有工作流程的工作运行总数",
+        
+        "Filter": "筛选",
+            "Search or filter": "搜索或筛选",
+            "Exclude": "排除",
+        "Download report": "下载报告",
+
+        // 高级帅选窗口
+            "Advanced filters": "高级筛选",
+                        "Build complex filter queries": "建立复杂的筛选器查询",
+                        "To start building your query add your first filter using the button below.": "要开始建立查询，请使用下面的按钮添加第一个筛选器。",
+
+                        "Qualifier": "限定",
+                        "Operator": "操作",
+                            "is not one of": "不包含",
+                            "is one of": "包含",
+                            "is": "是",
+                            "greater than": "大于",
+                            "less than": "小于",
+                            "greater than or equal to": "大于或等于",
+                            "less than or equal to": "小于或等于",
+                            "equal to": "等于",
+                            "between": "之间",
+                        "Value": "值",
+                            "Make a selection": "请选择",
+                            "Select items": "请选择项目",
+                            "Filter values": "筛选值",
+                            "Enter a number": "键入数字",
+                            "Enter search text": "键入任意文本",
+                                "Me": "我",
+                                "Signed-in user": "已登录用户",
+                        "Add a filter": "添加",
+                            "Text": "文本",
+                        "Apply": "应用",
+            
+            // 关闭弹窗
+            "Discard changes?": "是否放弃更改？",
+            "You have unsaved changes. Are you sure you want to discard them?": "您有未保存的更改。您确定要放弃它们吗？",
+            "Keep editing": "继续编辑",
+            "Close and discard": "关闭并放弃",
+
+            //筛选器报错窗口
+            "Empty value for": "空值：",
+            "Text will be ignored since log searching is not yet available:": "由于尚未提供日志搜索功能，文本将被忽略：",
+        
+        "Workflows": "工作流",
+        "Jobs": "作业",
+            "Job": "作业",
+            "Job runs": "作业运行",
+        "Runtime OS": "操作系统",
+        "Runner type": "运行器类型",
+            "hosted": "托管",
+            "hosted-larger": "大型托管",
+            "self-hosted": "自托管",
+        
+        // 无数据
+            "No table data available yet.": "还没有数据。",
+                "You don't have workflows on any of your organization repositories.": "您的任何组织仓库中都没有工作流程。",
+            "Get started with GitHub Actions": "快速开始",
+
+        "Workflow": "工作流",
+        "Workflow runs": "工作流运行",
+
+        "of": "/",
+
+    },
+    "regexp": [
+        [/Showing data from (\d+)\/(\d+)\/(\d+) to/, "显示数据：从$1年$2月$3日至"],
+        [/Total (minutes|job runs) across all workflows in this organization for (current week \(mon-sun\)|current month|last month|last 30 days|last 90 days|last year)/, function(all, type, period){
+            var typeKey = {'minutes': '总分钟数', 'job runs': '总工作运行数'};
+
+            var periodKey = {
+                "current week (mon-sun)": "本周（周一-周日）",
+                "current month": "本月",
+                "last month": "上个月",
+                "last 30 days": "最近30天",
+                "last 90 days": "最近90天",
+                "last year": "最近一年",};
+            
+            return periodKey[period] + '该组织所有工作流程的' + typeKey[type];
+        }],
     ],
 };
